@@ -47,7 +47,7 @@ FAQ
 
 Q: MineCraft is only using one gigabyte of RAM. How can I increase this?
 
-By default, this script tells Java to run Minecraft with 1024M of RAM.
+By default, this script tells Java to run Minecraft with 1024 megabytes of RAM.
 
 However, the amount of RAM that you want is easily configurable. You can simply
 export the amount of RAM as an environment variable or you can edit the
