@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+# Change this to update Minecraft.
+minecraft_version='1.6.2'
+
+# Setup paths
+script_path=$(readlink -f $(dirname "${0}"))
+script_name=$(basename "${0}")
+
+# Figure out the MineCraft root based on $script_path
+if [[ "${script_path:(-4):4}" != "/bin" ]]; then
+  minecraft_root="${script_path}"
+else
+  minecraft_root=$(dirname "${script_path}")
+fi
+
+# Don't change bin_path. It's the only one which you can't configure.
+# If you absolutely need to change it, then make sure to change all
+# references to "/bin" in this script.
+bin_path="${minecraft_root}/bin/"
+lib_path="${minecraft_root}/lib/"
+game_path="${minecraft_root}/etc/"
+
+# This script installs itself into bin on first run
+if [[ "${script_path:(-4):4}" != "/bin" ]]; then
+  if [[ ! -d "${bin_path}" ]]; then mkdir "${bin_path}"; fi
+  mv "${0}" "${bin_path}"
+fi
+
+minecraft_filename="minecraft_server.${minecraft_version}.jar"
+minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${minecraft_version}/${minecraft_filename}"
+minecraft_path="${lib_path}${minecraft_filename}"
+
+# Create paths if not already created.
+if [[ ! -d "${lib_path}" ]]; then mkdir "${lib_path}"; fi
+if [[ ! -d "${game_path}" ]]; then mkdir "${game_path}"; fi
+
+# Download Minecraft if it hasn't already been downloaded.
+if [[ ! -e "${minecraft_path}" ]]; then
+  which wget > /dev/null 2> /dev/null
+
+  if [[ $? != 0 ]]; then
+    which curl > /dev/null 2> /dev/null
+
+    if [[ $? != 0 ]]; then
+      echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
+
+      echo "Please download Minecraft from the following URL and place it in"
+      echo "the '${lib_path}' directory."
+
+      echo "${minecraft_url}"
+      exit
+    else
+      curl -O "${minecraft_url}"
+      mv "${minecraft_root}/${minecraft_filename}" "${lib_path}"
+    fi
+  else
+    wget -O "${minecraft_path}" "${minecraft_url}"
+  fi
+fi
+
+if [[ "${script_path:(-4):4}" != "/bin" ]]; then
+  echo 'Your new Minecraft server can now be run from this directory with'
+  echo 'the following command:'
+
+  echo ''
+  echo "./bin/${script_name}"
+  echo ''
+
+  echo "All of your worlds and configurations are in ${game_path}."
+  echo 'Go ahead and try it now!'
+
+  exit
+fi
+
+# Run Minecraft.
+cd "${game_path}" && java -Xmx512M -Xms512M -jar "${lib_path}${minecraft_filename}"
+
