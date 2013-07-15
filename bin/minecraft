@@ -113,5 +113,5 @@ if [[ ! -z "${MINECRAFT_EXTRA_OPTIONS}" ]]; then
 fi
 
 # Run Minecraft.
-cd "${game_path}" && echo java ${minecraft_opts} -jar "${lib_path}${minecraft_filename}"
+cd "${game_path}" && java ${minecraft_opts} -jar "${lib_path}${minecraft_filename}"
 
