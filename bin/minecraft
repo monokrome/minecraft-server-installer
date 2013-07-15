@@ -70,6 +70,8 @@ if [[ ! -e "${minecraft_path}" ]]; then
       echo "the '${lib_path}' directory."
 
       echo "${minecraft_url}"
+      echo
+
       exit
     else
       curl -O "${minecraft_url}"
@@ -90,6 +92,7 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
 
   echo "All of your worlds and configurations are in ${game_path}."
   echo 'Go ahead and try it now!'
+  echo
 
   exit
 fi
