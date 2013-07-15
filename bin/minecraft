@@ -4,7 +4,19 @@
 minecraft_version='1.6.2'
 
 # Setup paths
-script_path=$(readlink -f $(dirname "${0}"))
+if [[ $(uname -s) == 'Linux' ]]; then
+  script_path=$(readlink -f $(dirname "${0}"))
+else
+  # Absolute path for non-Linux systems. Potentially will
+  # break in more unusal circustances where the script is
+  # not in the current working directory.
+  realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+  }
+
+  script_path=$(realpath $(dirname "${0}"))
+fi
+
 script_name=$(basename "${0}")
 
 # Figure out the MineCraft root based on $script_path
