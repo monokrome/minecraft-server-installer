@@ -3,6 +3,9 @@
 # Change this to update Minecraft.
 minecraft_version='1.6.2'
 
+# Change this to modify number of megabytes of RAM to let Minecraft use
+default_memory_size='1024'
+
 # Setup paths
 if [[ $(uname -s) == 'Linux' ]]; then
   script_path=$(readlink -f $(dirname "${0}"))
@@ -42,6 +45,12 @@ fi
 minecraft_filename="minecraft_server.${minecraft_version}.jar"
 minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${minecraft_version}/${minecraft_filename}"
 minecraft_path="${lib_path}${minecraft_filename}"
+
+if [[ -n "${MINECRAFT_MAX_MEMORY}" ]]; then
+  memory_size="${MINECRAFT_MAX_MEMORY}"
+else
+  memory_size="${default_memory_size}"
+fi
 
 # Create paths if not already created.
 if [[ ! -d "${lib_path}" ]]; then mkdir "${lib_path}"; fi
@@ -86,5 +95,5 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
 fi
 
 # Run Minecraft.
-cd "${game_path}" && java -Xmx512M -Xms512M -jar "${lib_path}${minecraft_filename}"
+cd "${game_path}" && echo java -Xmx${memory_size}M -Xms${memory_size}M -jar "${lib_path}${minecraft_filename}"
 
