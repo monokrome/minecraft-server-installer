@@ -6,6 +6,15 @@ minecraft_version='1.6.2'
 # Change this to modify number of megabytes of RAM to let Minecraft use
 default_memory_size='1024'
 
+which java > /dev/null 2> /dev/null
+
+# Verify that java is installed
+if [[ $? != 0 ]]; then
+  echo 'Please install the Java Runtime Environment on your machine'
+  echo 'before running this script.'
+  exit
+fi
+
 # Setup paths
 if [[ $(uname -s) == 'Linux' ]]; then
   script_path=$(readlink -f $(dirname "${0}"))

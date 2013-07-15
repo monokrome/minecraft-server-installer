@@ -8,6 +8,14 @@ itself.  However, if you would prefer to do this with manual dowloading - you
 can just set up your server with `curl`, `wget`, or by manually executing the
 `bin/minecraft` script.
 
+Prerequisites
+-------------
+
+It is expected that you have installed Java on your machine if it is not
+already provided. The reason for this is that this script doesn't want to
+make any assumptions about which Java versions you prefer, or how you want
+them installed.
+
 Super Easy Installation
 -----------------------
 
