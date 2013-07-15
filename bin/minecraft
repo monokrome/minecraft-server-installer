@@ -86,9 +86,9 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
   echo 'Your new Minecraft server can now be run from this directory with'
   echo 'the following command:'
 
-  echo ''
+  echo
   echo "./bin/${script_name}"
-  echo ''
+  echo
 
   echo "All of your worlds and configurations are in ${game_path}."
   echo 'Go ahead and try it now!'
