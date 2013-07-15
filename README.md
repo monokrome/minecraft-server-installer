@@ -45,7 +45,7 @@ from inside your 'minecraft' directory.
 FAQ
 ---
 
-Q: MineCraft is only give one gigabyte of RAM. How can I increase this?
+Q: MineCraft is only using one gigabyte of RAM. How can I increase this?
 
 By default, this script tells Java to run Minecraft with 1024M of RAM.
 
