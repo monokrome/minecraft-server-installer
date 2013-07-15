@@ -106,6 +106,12 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
   exit
 fi
 
+minecraft_opts="-Xmx${memory_size}M -Xms${memory_size}M"
+
+if [[ ! -z "${MINECRAFT_EXTRA_OPTIONS}" ]]; then
+  minecraft_opts="${minecraft_opts} ${MINECRAFT_EXTRA_OPTIONS}"
+fi
+
 # Run Minecraft.
-cd "${game_path}" && java -Xmx${memory_size}M -Xms${memory_size}M -jar "${lib_path}${minecraft_filename}"
+cd "${game_path}" && echo java ${minecraft_opts} -jar "${lib_path}${minecraft_filename}"
 
