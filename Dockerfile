@@ -1,0 +1,10 @@
+FROM fkautz/java6-jre
+MAINTAINER Brandon R. Stoner <monokrome@monokro.me>
+
+WORKDIR /usr/local
+
+RUN apt-get install -qq git-core wget
+ADD bin/minecraft /usr/local/bin/minecraft
+
+CMD ["minecraft"]
+EXPOSE 25565
