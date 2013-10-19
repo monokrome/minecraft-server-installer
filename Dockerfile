@@ -7,4 +7,4 @@ RUN apt-get install -qq git-core wget
 ADD bin/minecraft /usr/local/bin/minecraft
 
 CMD ["minecraft"]
-EXPOSE 25565
+EXPOSE 25565:25565
