@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Change this to update Minecraft.
-minecraft_version='1.7.1'
+minecraft_version='1.7.2'
 
 # Change this to modify number of megabytes of RAM to let Minecraft use
 default_memory_size='1024'
