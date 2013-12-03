@@ -1,0 +1,55 @@
+#!/usr/bin/env sh
+
+# Setup paths
+if [[ $(uname -s) == 'Linux' ]]; then
+  script_path=$(readlink -f $(dirname "${0}"))
+else
+  # Absolute path for non-Linux systems. Potentially will
+  # break in more unusal circustances where the script is
+  # not in the current working directory.
+  realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+  }
+
+  script_path=$(realpath $(dirname "${0}"))
+fi
+
+script_name=$(basename "${0}")
+
+# Figure out the MineCraft root based on $script_path
+if [[ "${script_path:(-4):4}" != "/bin" ]]; then
+  minecraft_root="${script_path}"
+else
+  minecraft_root=$(dirname "${script_path}")
+fi
+
+configuration_path="${minecraft_root}/etc/"
+backups_path="${minecraft_root}/backups/"
+
+filename="$(date +'%Y%m%d%H%M').tar"
+backup_filename="${backups_path}${filename}"
+snapshot_filename="${backups_path}incremental.snar"
+
+# Try to use gnu-tar on BSD systems.
+which gtar > /dev/null 2> /dev/null
+
+if [[ $? == 0 ]]; then
+  tar_command=gtar
+else
+  tar_command=tar
+fi
+
+[[ -d "${backups_path}" ]] || mkdir -p "${backups_path}"
+
+echo "Backing up from: ${configuration_path}"
+echo "Backing up to: ${backup_filename}"
+echo "Incremental data in: ${snapshot_filename}"
+
+if [[ -f "${backup_filename}" ]]; then
+  echo 'A backup already exists for' $(date)
+else
+  $tar_command --create \
+    "--file=${backup_filename}" \
+    "--listed-incremental=${snapshot_filename}" \
+    "${configuration_path}"
+fi
