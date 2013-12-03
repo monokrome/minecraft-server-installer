@@ -53,7 +53,7 @@ from inside your 'minecraft' directory.
 FAQ
 ---
 
-Q: MineCraft is only using one gigabyte of RAM. How can I increase this?
+#### MineCraft is only using one gigabyte of RAM. How can I increase this?
 
 By default, this script tells Java to run Minecraft with 1024 megabytes of RAM.
 
@@ -84,3 +84,28 @@ If you know how to edit a bash script, you can also change the
 least recommended of options, but useful if you have no way to change your
 environment (as much as I doubt that's even possible) for some reason.
 
+
+#### I want to run a different version of Minecraft. Is this possible?
+
+You can run whatever version of Minecraft you'd like by simply setting the
+`MINECRAFT_VERSION` environment variable. When you set this variable, the
+requested version will automatically download when you run the server.
+
+It is important to note that the `etc` directory is created when you start
+Minecraft for the first time. If you start Minecraft and then decide to
+revert to an older version, it may not work as expected. You should never
+downgrade Minecraft after you've started a world for this reason.
+
+
+#### I want to run a Bukkit server. Is this possible?
+
+This installer is equipped with support for Bukkit. It will automatically
+provide a recommended MINECRAFT_VERSION if one hasn't been specified, and
+will automatically download the current recommended Bukkit build when you
+run your server.
+
+If you prefer to run a custom version of Minecraft and/or Bukkit, you can
+set the `MINECRAFT_VERSION` and `BUKKIT_URL` environment variables. It is
+important that you always provide a `BUKKIT_URL` if you are specifying a
+manual `MINECRAFT_VERSION` since Bukkit doesn't provide deterministic
+URLs in order for us to automatically generate them for you.
