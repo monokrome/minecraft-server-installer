@@ -2,7 +2,10 @@
 
 # Change this to modify number of megabytes of RAM to let Minecraft use
 default_memory_size='1024'
+
+# Current Minecraft versions
 default_minecraft_version=1.7.2
+bukkit_minecraft_version=1.6.4
 
 which java > /dev/null 2> /dev/null
 
@@ -49,9 +52,63 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
   mv "${0}" "${bin_path}"
 fi
 
-# Change this to update Minecraft.
-if [[ -z "$MINECRAFT_VERSION" ]]; then
-  MINECRAFT_VERSION=$default_minecraft_version
+# Create paths if not already created.
+if [[ ! -d "${lib_path}" ]]; then mkdir "${lib_path}"; fi
+if [[ ! -d "${game_path}" ]]; then mkdir "${game_path}"; fi
+
+# Bukkit support.
+if [[ ! -z $BUKKIT_ENABLED ]]; then
+  if [[ -z "$MINECRAFT_VERSION" ]]; then
+    MINECRAFT_VERSION=$bukkit_minecraft_version
+
+  elif [[ ! -z $BUKKIT_URL ]]; then
+    echo 'WARNING: It is recommended to manually set BUKKIT_URL when using'
+    echo 'a manual MINECRAFT_VERSION along with setting the BUKKIT_ENABLED.'
+    echo 'variable. Continuing with latest bukkit and running the server '
+    echo "using Minecraft version ${MINECRAFT_VERSION}."
+    echo
+  fi
+
+  if [[ -z $BUKKIT_URL ]]; then
+    BUKKIT_URL='http://dl.bukkit.org/latest-rb/craftbukkit.jar'
+  fi
+
+  jar_filename="${lib_path}bukkit.jar"
+
+  # Download Bukkit if it hasn't already been downloaded.
+  if [[ ! -e "${jar_filename}" ]]; then
+    which wget > /dev/null 2> /dev/null
+
+    if [[ $? != 0 ]]; then
+      which curl > /dev/null 2> /dev/null
+
+      if [[ $? != 0 ]]; then
+        echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
+
+        echo "Please download Bukkit from the following URL and place it in"
+        echo "the '${lib_path}' directory."
+        echo
+
+        echo "${BUKKIT_URL}"
+        echo
+
+        exit
+      else
+        curl -O "${BUKKIT_URL}"
+        mv "${minecraft_root}/bukkit*" "${jar_filename}"
+      fi
+    else
+      echo 'Bukkit not found. Downloading.'
+      wget -O "${jar_filename}" "${BUKKIT_URL}"
+    fi
+  fi
+else
+  # Change this to update Minecraft.
+  if [[ -z "$MINECRAFT_VERSION" ]]; then
+    MINECRAFT_VERSION=$default_minecraft_version
+  fi
+
+  jar_filename="${lib_path}${minecraft_filename}"
 fi
 
 minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
@@ -63,10 +120,6 @@ if [[ -n "${MINECRAFT_MAX_MEMORY}" ]]; then
 else
   memory_size="${default_memory_size}"
 fi
-
-# Create paths if not already created.
-if [[ ! -d "${lib_path}" ]]; then mkdir "${lib_path}"; fi
-if [[ ! -d "${game_path}" ]]; then mkdir "${game_path}"; fi
 
 # Download Minecraft if it hasn't already been downloaded.
 if [[ ! -e "${minecraft_path}" ]]; then
@@ -80,6 +133,7 @@ if [[ ! -e "${minecraft_path}" ]]; then
 
       echo "Please download Minecraft from the following URL and place it in"
       echo "the '${lib_path}' directory."
+      echo
 
       echo "${minecraft_url}"
       echo
@@ -116,5 +170,4 @@ if [[ ! -z "${MINECRAFT_EXTRA_OPTIONS}" ]]; then
 fi
 
 # Run Minecraft.
-cd "${game_path}" && java ${minecraft_opts} -jar "${lib_path}${minecraft_filename}"
-
+cd "${game_path}" && java ${minecraft_opts} -jar "${jar_filename}"
