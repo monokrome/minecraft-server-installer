@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # Change this to update Minecraft.
-minecraft_version='1.7.2'
+if [[ -z "$MINECRAFT_VERSION" ]]; then
+  MINECRAFT_VERSION='1.7.2'
+fi
 
 # Change this to modify number of megabytes of RAM to let Minecraft use
 default_memory_size='1024'
@@ -51,8 +53,8 @@ if [[ "${script_path:(-4):4}" != "/bin" ]]; then
   mv "${0}" "${bin_path}"
 fi
 
-minecraft_filename="minecraft_server.${minecraft_version}.jar"
-minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${minecraft_version}/${minecraft_filename}"
+minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
+minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${MINECRAFT_VERSION}/${minecraft_filename}"
 minecraft_path="${lib_path}${minecraft_filename}"
 
 if [[ -n "${MINECRAFT_MAX_MEMORY}" ]]; then
