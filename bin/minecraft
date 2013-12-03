@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-# Change this to update Minecraft.
-if [[ -z "$MINECRAFT_VERSION" ]]; then
-  MINECRAFT_VERSION='1.7.2'
-fi
-
 # Change this to modify number of megabytes of RAM to let Minecraft use
 default_memory_size='1024'
+default_minecraft_version=1.7.2
 
 which java > /dev/null 2> /dev/null
 
@@ -51,6 +47,11 @@ game_path="${minecraft_root}/etc/"
 if [[ "${script_path:(-4):4}" != "/bin" ]]; then
   if [[ ! -d "${bin_path}" ]]; then mkdir "${bin_path}"; fi
   mv "${0}" "${bin_path}"
+fi
+
+# Change this to update Minecraft.
+if [[ -z "$MINECRAFT_VERSION" ]]; then
+  MINECRAFT_VERSION=$default_minecraft_version
 fi
 
 minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
