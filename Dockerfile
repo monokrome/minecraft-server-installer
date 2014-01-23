@@ -1,4 +1,4 @@
-FROM fkautz/java6-jre
+FROM dockerfile/java
 MAINTAINER Brandon R. Stoner <monokrome@monokro.me>
 
 WORKDIR /usr/local
