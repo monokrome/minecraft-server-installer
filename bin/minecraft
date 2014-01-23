@@ -108,44 +108,42 @@ else
     MINECRAFT_VERSION=$default_minecraft_version
   fi
 
+  minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
+  minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${MINECRAFT_VERSION}/${minecraft_filename}"
   jar_filename="${lib_path}${minecraft_filename}"
-fi
 
-minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
-minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${MINECRAFT_VERSION}/${minecraft_filename}"
-minecraft_path="${lib_path}${minecraft_filename}"
+  # Download Minecraft if it hasn't already been downloaded.
+  if [[ ! -e "${jar_filename}" ]]; then
+    which wget > /dev/null 2> /dev/null
+
+    if [[ $? != 0 ]]; then
+      which curl > /dev/null 2> /dev/null
+
+      if [[ $? != 0 ]]; then
+        echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
+
+        echo "Please download Minecraft from the following URL and place it in"
+        echo "the '${lib_path}' directory."
+        echo
+
+        echo "${minecraft_url}"
+        echo
+
+        exit
+      else
+        curl -O "${minecraft_url}"
+        mv "${minecraft_root}/${minecraft_filename}" "${lib_path}"
+      fi
+    else
+      wget -O "${jar_filename}" "${minecraft_url}"
+    fi
+  fi
+fi
 
 if [[ -n "${MINECRAFT_MAX_MEMORY}" ]]; then
   memory_size="${MINECRAFT_MAX_MEMORY}"
 else
   memory_size="${default_memory_size}"
-fi
-
-# Download Minecraft if it hasn't already been downloaded.
-if [[ ! -e "${minecraft_path}" ]]; then
-  which wget > /dev/null 2> /dev/null
-
-  if [[ $? != 0 ]]; then
-    which curl > /dev/null 2> /dev/null
-
-    if [[ $? != 0 ]]; then
-      echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
-
-      echo "Please download Minecraft from the following URL and place it in"
-      echo "the '${lib_path}' directory."
-      echo
-
-      echo "${minecraft_url}"
-      echo
-
-      exit
-    else
-      curl -O "${minecraft_url}"
-      mv "${minecraft_root}/${minecraft_filename}" "${lib_path}"
-    fi
-  else
-    wget -O "${minecraft_path}" "${minecraft_url}"
-  fi
 fi
 
 if [[ "${script_path:(-4):4}" != "/bin" ]]; then
