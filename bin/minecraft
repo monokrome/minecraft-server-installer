@@ -4,7 +4,7 @@
 default_memory_size='1024'
 
 # Current Minecraft versions
-default_minecraft_version=1.7.9
+default_minecraft_version=1.8.0
 bukkit_minecraft_version=1.6.4
 
 which java > /dev/null 2> /dev/null
