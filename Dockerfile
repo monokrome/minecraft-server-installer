@@ -1,4 +1,4 @@
-FROM dockerfile/java
+FROM java
 MAINTAINER Brandon R. Stoner <monokrome@monokro.me>
 
 WORKDIR /usr/local
