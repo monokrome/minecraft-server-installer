@@ -1,5 +1,5 @@
-FROM java
-MAINTAINER Brandon R. Stoner <monokrome@monokro.me>
+FROM openjdk
+MAINTAINER Bailey Stoner <monokrome@monokro.me>
 
 WORKDIR /usr/local
 

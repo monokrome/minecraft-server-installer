@@ -1,171 +1,129 @@
 #!/usr/bin/env bash
 
-# Change this to modify number of megabytes of RAM to let Minecraft use
-default_memory_size='1024'
+### Minecraft Server Installer v0.4
+### Maintaned by Bailey "monokrome" Stoner <monokrome at monokro dot me>
 
-# Current Minecraft versions
-default_minecraft_version=1.8.4
-bukkit_minecraft_version=1.6.4
+### CONFIGURATION SECTION
 
-which java > /dev/null 2> /dev/null
+### You can edit the values in this section, or use environment variables
+### to override them without editing this file.
+
+MINECRAFT_VERSION=
+MINECRAFT_GAME_PATH=
+
+## END OF CONFIGURATION SECTION
+
+# Keep track of some internal state
+initial_pwd=$(pwd)
+_script_ref_name=$0
+_system_type=$(uname -o)
+
+realpath() {
+  case $_system_type in
+  GNU/*) readlink --canonicalize $@;;
+  *)
+    path_name="${@}"
+
+    if [[ -z "$path_name" ]]; then
+      printf '_resolve_links misused. It should be given one (and only one) path' > /dev/stderr
+      exit 1
+    fi
+
+    if [[ ! -e "$path_name" ]]; then
+      printf '_resolve_links misused. The given path did not exist: %s\n' "$path" > /dev/stderr
+      exit 1
+    fi
+
+    result=''
+    while [[ $result != /* ]]; do
+      basename=$(basename $(pwd))
+      linkname=$(readlink $basename)
+      [[ ! -z $linkname ]] && basename=$linkname
+      [[ $basename == / ]] && result=/${result} && continue
+      result=${basename}/${result}
+      cd ..
+    done
+    echo ${result}
+
+    cd "${initial_pwd}"
+  esac
+}
+
+script_path=$(realpath ${_script_ref_name})
+script_dirname=$(dirname ${script_path})
+
+# Move script to a bin directory if it's not already in one
+if [[ $script_dirname != */bin ]]; then
+  mkdir -p ${script_dirname}/bin
+  new_script_dirname=${script_dirname}/bin
+  mv "${script_path}" "${new_script_dirname}"
+  exec ${new_script_dirname}/minecraft
+fi
+
+# Assign default values for options that aren't already set in the environment
+[[ -z $MINECRAFT_VERSION ]] && MINECRAFT_VERSION=1.12.2
+[[ -z $MINECRAFT_GAME_PATH ]] && MINECRAFT_GAME_PATH=$(dirname ${script_dirname})/etc/minecraft
+
+# Setup & run Minecraft
+if [[ -f ${MINECRAFT_GAME_PATH} ]]; then
+  printf 'Can not use %s as game directory. It is already a file.' $MINECRAFT_GAME_PATH > /dev/stderr
+  exit 1
+fi
+
+lib_path=$(dirname ${script_dirname})/lib
+
+[[ ! -e ${MINECRAFT_GAME_PATH} ]] && mkdir -p ${MINECRAFT_GAME_PATH}
+[[ ! -e $lib_path ]] && mkdir -p ${lib_path}
+
+minecraft_filename=minecraft_server.${MINECRAFT_VERSION}.jar
+
+get_via=$(which curl 2> /dev/null)
+
+if [[ -z $get_via ]]; then
+  get_via=${get_via} -O
+else
+  get_via=$(which wget 2> /dev/null)
+fi
+
+if [[ -z $get_via ]]; then
+  printf 'This script requires to have curl or wget installed.' > /dev/stderr
+  exit 1
+fi
 
 # Verify that java is installed
-if [[ $? != 0 ]]; then
-  echo 'Please install the Java Runtime Environment on your machine'
-  echo 'before running this script.'
-  exit
+java=$(which java 2> /dev/null)
+
+if [[ -z $java ]]; then
+  printf 'Could not detect java in PATH. Have you installed OpenJDK?\n'
+  exit 1
 fi
 
-# Setup paths
-if [[ $(uname -s) == 'Linux' ]]; then
-  script_path=$(readlink -f $(dirname "${0}"))
-else
-  # Absolute path for non-Linux systems. Potentially will
-  # break in more unusal circustances where the script is
-  # not in the current working directory.
-  realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-  }
+# Download Minecraft if not already downloaded
+minecraft_url=https://s3.amazonaws.com/Minecraft.Download/versions/$MINECRAFT_VERSION/$minecraft_filename
+minecraft_path=${lib_path}/${minecraft_filename}
 
-  script_path=$(realpath $(dirname "${0}"))
+if [[ ! -e $minecraft_path ]]; then
+  rm -rf minecraft.*.jar
+  cd ${lib_path}
+  $get_via $minecraft_url
+  cd ${initial_pwd}
 fi
 
-script_name=$(basename "${0}")
+printf 'Using Minecraft located at: %s\n' $minecraft_path
 
-# Figure out the MineCraft root based on $script_path
-if [[ "${script_path:(-4):4}" != "/bin" ]]; then
-  minecraft_root="${script_path}"
-else
-  minecraft_root=$(dirname "${script_path}")
+cd ${MINECRAFT_GAME_PATH}
+
+eula_path=${MINECRAFT_GAME_PATH}/eula.txt
+eula_url=https://account.mojang.com/documents/minecraft_eula
+
+if [[ ! -e ${eula_path} ]]; then
+  printf 'Minecraft will start in 15 seconds. Please close this program \n' > /dev/stderr
+  printf 'if you have not read the Minecraft End User License Agreement.\n' > /dev/stderr
+  printf 'Running this program means that you accept the terms outlined \n' > /dev/stderr
+  printf 'in it. The Minecraft EULA can be found at:\n\n%s\n\n' $eula_url > /dev/stderr
+  sleep 15
+  mkdir -p $(dirname ${eula_path})
+  echo 'eula=true' > ${eula_path}
 fi
 
-# Don't change bin_path. It's the only one which you can't configure.
-# If you absolutely need to change it, then make sure to change all
-# references to "/bin" in this script.
-bin_path="${minecraft_root}/bin/"
-lib_path="${minecraft_root}/lib/"
-game_path="${minecraft_root}/etc/"
-
-# This script installs itself into bin on first run
-if [[ "${script_path:(-4):4}" != "/bin" ]]; then
-  if [[ ! -d "${bin_path}" ]]; then mkdir "${bin_path}"; fi
-  mv "${0}" "${bin_path}"
-fi
-
-# Create paths if not already created.
-if [[ ! -d "${lib_path}" ]]; then mkdir "${lib_path}"; fi
-if [[ ! -d "${game_path}" ]]; then mkdir "${game_path}"; fi
-
-# Bukkit support.
-if [[ ! -z $BUKKIT_ENABLED ]]; then
-  if [[ -z "$MINECRAFT_VERSION" ]]; then
-    MINECRAFT_VERSION=$bukkit_minecraft_version
-
-  elif [[ ! -z $BUKKIT_URL ]]; then
-    echo 'WARNING: It is recommended to manually set BUKKIT_URL when using'
-    echo 'a manual MINECRAFT_VERSION along with setting the BUKKIT_ENABLED.'
-    echo 'variable. Continuing with latest bukkit and running the server '
-    echo "using Minecraft version ${MINECRAFT_VERSION}."
-    echo
-  fi
-
-  if [[ -z $BUKKIT_URL ]]; then
-    BUKKIT_URL='http://dl.bukkit.org/latest-rb/craftbukkit.jar'
-  fi
-
-  jar_filename="${lib_path}bukkit.jar"
-
-  # Download Bukkit if it hasn't already been downloaded.
-  if [[ ! -e "${jar_filename}" ]]; then
-    which wget > /dev/null 2> /dev/null
-
-    if [[ $? != 0 ]]; then
-      which curl > /dev/null 2> /dev/null
-
-      if [[ $? != 0 ]]; then
-        echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
-
-        echo "Please download Bukkit from the following URL and place it in"
-        echo "the '${lib_path}' directory."
-        echo
-
-        echo "${BUKKIT_URL}"
-        echo
-
-        exit
-      else
-        curl -O "${BUKKIT_URL}"
-        mv "${minecraft_root}/bukkit*" "${jar_filename}"
-      fi
-    else
-      echo 'Bukkit not found. Downloading.'
-      wget -O "${jar_filename}" "${BUKKIT_URL}"
-    fi
-  fi
-else
-  # Change this to update Minecraft.
-  if [[ -z "$MINECRAFT_VERSION" ]]; then
-    MINECRAFT_VERSION=$default_minecraft_version
-  fi
-
-  minecraft_filename="minecraft_server.${MINECRAFT_VERSION}.jar"
-  minecraft_url="https://s3.amazonaws.com/Minecraft.Download/versions/${MINECRAFT_VERSION}/${minecraft_filename}"
-  jar_filename="${lib_path}${minecraft_filename}"
-
-  # Download Minecraft if it hasn't already been downloaded.
-  if [[ ! -e "${jar_filename}" ]]; then
-    which wget > /dev/null 2> /dev/null
-
-    if [[ $? != 0 ]]; then
-      which curl > /dev/null 2> /dev/null
-
-      if [[ $? != 0 ]]; then
-        echo "You do not have wget or curl. Minecraft can not be automatically downloaded."
-
-        echo "Please download Minecraft from the following URL and place it in"
-        echo "the '${lib_path}' directory."
-        echo
-
-        echo "${minecraft_url}"
-        echo
-
-        exit
-      else
-        curl -O "${minecraft_url}"
-        mv "${minecraft_root}/${minecraft_filename}" "${lib_path}"
-      fi
-    else
-      wget -O "${jar_filename}" "${minecraft_url}"
-    fi
-  fi
-fi
-
-if [[ -n "${MINECRAFT_MAX_MEMORY}" ]]; then
-  memory_size="${MINECRAFT_MAX_MEMORY}"
-else
-  memory_size="${default_memory_size}"
-fi
-
-if [[ "${script_path:(-4):4}" != "/bin" ]]; then
-  echo 'Your new Minecraft server can now be run from this directory with'
-  echo 'the following command:'
-
-  echo
-  echo "./bin/${script_name}"
-  echo
-
-  echo "All of your worlds and configurations are in ${game_path}."
-  echo 'Go ahead and try it now!'
-  echo
-
-  exit
-fi
-
-minecraft_opts="-Xmx${memory_size}M -Xms${memory_size}M"
-
-if [[ ! -z "${MINECRAFT_EXTRA_OPTIONS}" ]]; then
-  minecraft_opts="${minecraft_opts} ${MINECRAFT_EXTRA_OPTIONS}"
-fi
-
-# Run Minecraft.
-cd "${game_path}" && java ${minecraft_opts} -jar "${jar_filename}"
+exec java -jar ${minecraft_path}
